@@ -4,146 +4,74 @@
 
 package frc.robot;
 
-// Import required modules
-import frc.robot.Commands.Autos;
-import frc.robot.Constants.PERIPHERALS;
-import frc.robot.subsystems.Drivetrain;
-
-// Import required libraries
-import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.controller.ProfiledPIDController;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.trajectory.Trajectory;
+import edu.wpi.first.math.trajectory.TrajectoryConfig;
+import edu.wpi.first.math.trajectory.TrajectoryGenerator;
+import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.PS4Controller.Button;
+import frc.robot.Constants.AutoConstants;
+import frc.robot.Constants.DriveConstants;
+import frc.robot.Constants.OIConstants;
+import frc.robot.subsystems.DriveSubsystem;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
-import edu.wpi.first.wpilibj2.command.button.Trigger;
+import edu.wpi.first.wpilibj2.command.RunCommand;
+import edu.wpi.first.wpilibj2.command.SwerveControllerCommand;
+import edu.wpi.first.wpilibj2.command.button.JoystickButton;
+import java.util.List;
 
-/**
- * This class is where the bulk of the robot should be declared. Since
- * Command-based is a
- * "declarative" paradigm, very little robot logic should actually be handled in
- * the {@link Robot}
- * periodic methods (other than the scheduler calls). Instead, the structure of
- * the robot (including
- * subsystems, commands, and button mappings) should be declared here.
+/*
+ * This class is where the bulk of the robot should be declared.  Since Command-based is a
+ * "declarative" paradigm, very little robot logic should actually be handled in the {@link Robot}
+ * periodic methods (other than the scheduler calls).  Instead, the structure of the robot
+ * (including subsystems, commands, and button mappings) should be declared here.
  */
 public class RobotContainer {
   // The robot's subsystems
-  private final Drivetrain drivetrain = new Drivetrain();
+  private final DriveSubsystem m_robotDrive = new DriveSubsystem();
 
   // The driver's controller
-  CommandXboxController driverController = new CommandXboxController(PERIPHERALS.DRIVER_PORT);
-  CommandXboxController operatorController = new CommandXboxController(PERIPHERALS.OPERATOR_PORT);
+  XboxController m_driverController = new XboxController(OIConstants.kDriverControllerPort);
 
-  //private final Command scoreGamePiece = Autos.automatedScoringCommand(drivetrain, mechanism);
-
-  // The autonomous routines
-  // private final Command driveBackAuto = Autos.driveBack(drivetrain, mechanism);
-  // private final Command balanceAuto = Autos.balance(drivetrain);
-  // private final Command scoreTwoAuto = Autos.scoreTwoPieces(drivetrain, mechanism);
-  // private final Command scoreConeMid = Autos.scoreConeMid(drivetrain, mechanism);
-  // private final Command scoreCubeMid = Autos.scoreCubeMid(drivetrain, mechanism);
-  // private final Command scoreCubeHigh = Autos.scoreCubeHigh(drivetrain, mechanism);
-  // private final Command scoreAndBalance = Autos.scoreAndBalance(drivetrain, mechanism);
-  // private final Command scoreMidAndBalance = Autos.scoreMidAndBalance(drivetrain, mechanism);
-  // private final Command scoreHighAndBalance = Autos.scoreHighAndBalance(drivetrain, mechanism);
-  
-
-  // A chooser for autonomous commands
-  SendableChooser<Command> autoChooser = new SendableChooser<>();
-
+  /**
+   * The container for the robot. Contains subsystems, OI devices, and commands.
+   */
   public RobotContainer() {
-    // Set default commands
+    // Configure the button bindings
+    configureButtonBindings();
 
-    // Control the drive with split-stick arcade controls
-    this.drivetrain.setDefaultCommand(
-        this.drivetrain.arcadeDriveCommand(
-            () -> -this.driverController.getLeftY(), () -> -this.driverController.getRightX(),
-            () -> this.driverController.getLeftTriggerAxis(), () -> this.driverController.getRightTriggerAxis()));
-
-    configureBindings();
-
-    // Add commands to the autonomous command chooser
-    // this.autoChooser.setDefaultOption("Drive Back", driveBackAuto);
-    // this.autoChooser.addOption("Balance Forward", balanceAuto);
-    // this.autoChooser.addOption("Score Two", scoreTwoAuto);
-    // this.autoChooser.addOption("Score Cone Mid", scoreConeMid);
-    // this.autoChooser.addOption("Score Cube Mid", scoreCubeMid);
-    // this.autoChooser.addOption("Score Cube High", scoreCubeHigh);
-    // this.autoChooser.addOption("Score and Balance", scoreAndBalance);
-    // this.autoChooser.addOption("Score Mid and Balance", scoreMidAndBalance);
-    // this.autoChooser.addOption("Score High and Balance", scoreHighAndBalance);
-    // this.autoChooser.addOption("Mobile Balance", mobileBalance);
-
-    SmartDashboard.putData("Autonomous Route", this.autoChooser);
+    // Configure default commands
+    m_robotDrive.setDefaultCommand(
+        // The left stick controls translation of the robot.
+        // Turning is controlled by the X axis of the right stick.
+        new RunCommand(
+            () -> m_robotDrive.drive(
+                -MathUtil.applyDeadband(m_driverController.getLeftY(), OIConstants.kDriveDeadband),
+                -MathUtil.applyDeadband(m_driverController.getLeftX(), OIConstants.kDriveDeadband),
+                -MathUtil.applyDeadband(m_driverController.getRightX(), OIConstants.kDriveDeadband),
+                true, true),
+            m_robotDrive));
   }
 
   /**
-   * Use this method to define bindings between conditions and commands. These are
-   * useful for
-   * automating robot behaviors based on button and sensor input.
-   *
-   * <p>
-   * Should be called during {@link Robot#robotInit()}.
-   *
-   * <p>
-   * Event binding methods are available on the {@link Trigger} class.
+   * Use this method to define your button->command mappings. Buttons can be
+   * created by
+   * instantiating a {@link edu.wpi.first.wpilibj.GenericHID} or one of its
+   * subclasses ({@link
+   * edu.wpi.first.wpilibj.Joystick} or {@link XboxController}), and then calling
+   * passing it to a
+   * {@link JoystickButton}.
    */
-  public void configureBindings() {
-
-    // Driver braking and emergency stop controls
-    this.driverController.rightBumper().or(this.driverController.y())
-        .onTrue(this.drivetrain.enableBrakeMode()).onFalse(this.drivetrain.releaseBrakeMode());
-
-    this.driverController.leftBumper()
-        .whileTrue(this.drivetrain.enableBrakeMode()
-            .andThen(this.drivetrain.emergencyStop()))
-        .onFalse(this.drivetrain.releaseBrakeMode());
-
-    // Driver automated routines
-    this.driverController.a().whileTrue(this.drivetrain.seekTarget())
-        .onFalse(Commands.runOnce(this.drivetrain::resetLimelight));
-    this.driverController.x().whileTrue(this.drivetrain.goToTarget())
-        .onFalse(Commands.runOnce(this.drivetrain::resetLimelight));
-    this.driverController.y().whileTrue(this.drivetrain.balance());
-    this.driverController.b().onTrue(Commands.runOnce(this.drivetrain::resetEncoders));
-
-
-    // Operator arm preset controls
-
-    // this.operatorController.leftStick().onTrue(this.mechanism.setArmPreset(MECHANISM.HOME));
-    // this.operatorController.povLeft().onTrue(this.mechanism.setArmPreset(MECHANISM.STOWED));
-    // this.operatorController.povDown().onTrue(this.mechanism.setArmPreset(MECHANISM.LOW));
-    // this.operatorController.povRight().onTrue(this.mechanism.setArmPreset(MECHANISM.MID));
-    // this.operatorController.povUp().onTrue(this.mechanism.setArmPreset(MECHANISM.HIGH));
-    // this.operatorController.rightStick().onTrue(this.mechanism.setArmPreset(MECHANISM.STATION));
-
-    // Operator intake claw controls
-    // this.operatorController.x().onTrue(this.mechanism.grabCube());
-    // this.operatorController.y().onTrue(this.mechanism.grabCone());
-    // this.operatorController.a().onTrue(this.mechanism.releaseGamePiece());
-    // this.operatorController.b().onTrue(this.mechanism.disableClaw());
-    // this.operatorController.rightTrigger().onTrue(this.mechanism.launchGamePiece());
-
-    // Operator game piece signals
-    // this.operatorController.leftBumper().whileTrue(this.mechanism.blinkCubeLED())
-    //     .onFalse(this.mechanism.setCubeLED(false));
-    // this.operatorController.rightBumper().whileTrue(this.mechanism.blinkConeLED())
-    //     .onFalse(this.mechanism.setConeLED(false));
-  }
-
-  /**
-   * HALTS all chassis motors
-   */
-  public void EMERGENCY_STOP() {
-    this.drivetrain.killSwitch();
-    //this.mechanism.shutDown();
-  }
-
-  /**
-   * Resets chassis state
-   */
-  public Command CHASSIS_RESET() {
-    return this.drivetrain.releaseBrakeMode();
+  private void configureButtonBindings() {
+    new JoystickButton(m_driverController, Button.kR1.value)
+        .whileTrue(new RunCommand(
+            () -> m_robotDrive.setX(),
+            m_robotDrive));
   }
 
   /**
@@ -152,6 +80,43 @@ public class RobotContainer {
    * @return the command to run in autonomous
    */
   public Command getAutonomousCommand() {
-    return this.autoChooser.getSelected();
+    // Create config for trajectory
+    TrajectoryConfig config = new TrajectoryConfig(
+        AutoConstants.kMaxSpeedMetersPerSecond,
+        AutoConstants.kMaxAccelerationMetersPerSecondSquared)
+        // Add kinematics to ensure max speed is actually obeyed
+        .setKinematics(DriveConstants.kDriveKinematics);
+
+    // An example trajectory to follow. All units in meters.
+    Trajectory exampleTrajectory = TrajectoryGenerator.generateTrajectory(
+        // Start at the origin facing the +X direction
+        new Pose2d(0, 0, new Rotation2d(0)),
+        // Pass through these two interior waypoints, making an 's' curve path
+        List.of(new Translation2d(1, 1), new Translation2d(2, -1)),
+        // End 3 meters straight ahead of where we started, facing forward
+        new Pose2d(3, 0, new Rotation2d(0)),
+        config);
+
+    var thetaController = new ProfiledPIDController(
+        AutoConstants.kPThetaController, 0, 0, AutoConstants.kThetaControllerConstraints);
+    thetaController.enableContinuousInput(-Math.PI, Math.PI);
+
+    SwerveControllerCommand swerveControllerCommand = new SwerveControllerCommand(
+        exampleTrajectory,
+        m_robotDrive::getPose, // Functional interface to feed supplier
+        DriveConstants.kDriveKinematics,
+
+        // Position controllers
+        new PIDController(AutoConstants.kPXController, 0, 0),
+        new PIDController(AutoConstants.kPYController, 0, 0),
+        thetaController,
+        m_robotDrive::setModuleStates,
+        m_robotDrive);
+
+    // Reset odometry to the starting pose of the trajectory.
+    m_robotDrive.resetOdometry(exampleTrajectory.getInitialPose());
+
+    // Run path following command, then stop at the end.
+    return swerveControllerCommand.andThen(() -> m_robotDrive.drive(0, 0, 0, false, false));
   }
 }
