@@ -7,7 +7,7 @@ import com.revrobotics.SparkMaxAlternateEncoder;
 import com.revrobotics.SparkMaxPIDController;
 import com.revrobotics.SparkMaxPIDController.AccelStrategy;
 
-import frc.robot.Constants.MISC;
+import frc.robot.Constants.Misc;
 
 public class SparkMaxPID {
 
@@ -120,7 +120,7 @@ public class SparkMaxPID {
 
     public void setSmartPosition(double position, double min, double max) {
         this.setpoint = position;
-        this.setSmartPosition(MISC.ENSURE_RANGE(position, min, max));
+        this.setSmartPosition(Misc.ENSURE_RANGE(position, min, max));
     }
 
     public void setSmartVelocity(double velocity) {
@@ -135,7 +135,7 @@ public class SparkMaxPID {
 
     public void setPosition(double position, double min, double max) {
         this.setpoint = position;
-        this.setPosition(MISC.ENSURE_RANGE(position, min, max));
+        this.setPosition(Misc.ENSURE_RANGE(position, min, max));
     }
 
     public void setVelocity(double speed) {
@@ -148,7 +148,7 @@ public class SparkMaxPID {
     }
 
     public boolean reachedSetpoint(double input, double tolerance) {
-        return MISC.WITHIN_TOLERANCE(input, this.setpoint, tolerance);
+        return Misc.WITHIN_TOLERANCE(input, this.setpoint, tolerance);
     }
 
 }
