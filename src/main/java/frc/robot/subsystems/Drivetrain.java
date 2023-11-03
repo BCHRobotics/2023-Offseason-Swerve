@@ -16,6 +16,7 @@ import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.util.WPIUtilJNI;
 import edu.wpi.first.wpilibj.interfaces.Gyro;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants.DriveConstants;
 import frc.utils.SwerveUtils;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -241,5 +242,12 @@ public class Drivetrain extends SubsystemBase {
    */
   public double getTurnRate() {
     return m_gyro.getRate() * (DriveConstants.kGyroReversed ? -1.0 : 1.0);
+  }
+
+  /** Prints all values to dashboard */
+  public void printToDashboard() {
+    SmartDashboard.putNumber("currentRotation: ", m_currentRotation);
+    SmartDashboard.putNumber("currentTranslationDirection: ", m_currentTranslationDir);
+    SmartDashboard.putNumber("currentTranslationMagnitude: ", m_currentTranslationMag);
   }
 }
