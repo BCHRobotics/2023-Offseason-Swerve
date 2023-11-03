@@ -81,6 +81,9 @@ public class Drivetrain extends SubsystemBase {
             m_rearLeft.getPosition(),
             m_rearRight.getPosition()
         });
+
+    //print to dashboard
+    printToDashboard();
   }
 
   /**
@@ -249,5 +252,7 @@ public class Drivetrain extends SubsystemBase {
     SmartDashboard.putNumber("currentRotation: ", m_currentRotation);
     SmartDashboard.putNumber("currentTranslationDirection: ", m_currentTranslationDir);
     SmartDashboard.putNumber("currentTranslationMagnitude: ", m_currentTranslationMag);
+    SmartDashboard.putNumber("Heading: ", getHeading());
+    SmartDashboard.putString("Gyro", Rotation2d.fromDegrees(m_gyro.getAngle()).toString());
   }
 }
