@@ -134,16 +134,18 @@ public class Drivetrain extends SubsystemBase {
 
       // Calculate the direction slew rate based on an estimate of the lateral acceleration
       double directionSlewRate;
+
+      //if there is no robot movement, direction change is instant
       if (m_currentTranslationMag != 0.0) {
         directionSlewRate = Math.abs(DriveConstants.kDirectionSlewRate / m_currentTranslationMag);
       } else {
         directionSlewRate = 500.0; //some high number that means the slew rate is effectively instantaneous
       }
-      
 
       double currentTime = WPIUtilJNI.now() * 1e-6;
       double elapsedTime = currentTime - m_prevTime;
       double angleDif = SwerveUtils.AngleDifference(inputTranslationDir, m_currentTranslationDir);
+
       if (angleDif < 0.45*Math.PI) {
         m_currentTranslationDir = SwerveUtils.StepTowardsCircular(m_currentTranslationDir, inputTranslationDir, directionSlewRate * elapsedTime);
         m_currentTranslationMag = m_magLimiter.calculate(inputTranslationMag);
@@ -162,12 +164,12 @@ public class Drivetrain extends SubsystemBase {
         m_currentTranslationDir = SwerveUtils.StepTowardsCircular(m_currentTranslationDir, inputTranslationDir, directionSlewRate * elapsedTime);
         m_currentTranslationMag = m_magLimiter.calculate(0.0);
       }
+      
       m_prevTime = currentTime;
       
       xSpeedCommanded = m_currentTranslationMag * Math.cos(m_currentTranslationDir);
       ySpeedCommanded = m_currentTranslationMag * Math.sin(m_currentTranslationDir);
       m_currentRotation = m_rotLimiter.calculate(rot);
-
 
     } else {
       xSpeedCommanded = xSpeed;
