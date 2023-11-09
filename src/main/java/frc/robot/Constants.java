@@ -35,6 +35,7 @@ public final class Constants {
     public static final double kRotationalSlewRate = 3.0; // percent per second (1 = 100%)
 
     // Chassis configuration
+    //TODO: Double check track width
     public static final double kTrackWidth = Units.inchesToMeters(24.625);
     // Distance between centers of right and left wheels on robot
     public static final double kWheelBase = Units.inchesToMeters(24.625);
