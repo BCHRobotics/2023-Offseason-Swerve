@@ -2,6 +2,9 @@ package frc.robot.commands;
 
 import java.util.List;
 
+import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.path.PathPlannerPath;
+
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -17,7 +20,8 @@ import frc.robot.Constants.DriveConstants;
 import frc.robot.subsystems.Drivetrain;
 
 public class Autos {
-    /**
+
+   /**
    * A basic auto that moves in an 's'curve path.
    *
    * @return Basic Auto Command
@@ -62,4 +66,15 @@ public class Autos {
     // Run path following command, then stop at the end.
     return swerveControllerCommand.andThen(() -> m_robotDrive.drive(0, 0, 0, false, false));
   }
+
+
+   /**
+   * An advanced auto that moves in a circular path.
+   *
+   * @return Advanced Auto Command
+   */
+  public static Command getAdvancedAuto(Drivetrain m_robotDrive) {
+    return AutoBuilder.followPathWithEvents(PathPlannerPath.fromPathFile("AdvancedAuto"));
+  }
+  
 }

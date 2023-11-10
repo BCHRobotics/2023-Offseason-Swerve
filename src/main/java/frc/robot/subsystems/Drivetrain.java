@@ -5,6 +5,8 @@
 package frc.robot.subsystems;
 
 import com.kauailabs.navx.frc.AHRS;
+import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.util.HolonomicPathFollowerConfig;
 
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -16,7 +18,6 @@ import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.util.WPIUtilJNI;
 import edu.wpi.first.wpilibj.interfaces.Gyro;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants.DriveConstants;
 import frc.utils.SwerveUtils;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -68,6 +69,7 @@ public class Drivetrain extends SubsystemBase {
 
   /** Creates a new DriveSubsystem. */
   public Drivetrain() {
+    initializeAuto();
   }
 
   @Override
@@ -81,9 +83,6 @@ public class Drivetrain extends SubsystemBase {
             m_rearLeft.getPosition(),
             m_rearRight.getPosition()
         });
-
-    // print to dashboard
-    printToDashboard();
   }
 
   /**
@@ -123,7 +122,7 @@ public class Drivetrain extends SubsystemBase {
    * @param rateLimit     Whether to enable rate limiting for smoother control.
    */
   public void drive(double xSpeed, double ySpeed, double rot, boolean fieldRelative, boolean rateLimit) {
-
+    
     double xSpeedCommanded;
     double ySpeedCommanded;
 
@@ -132,44 +131,42 @@ public class Drivetrain extends SubsystemBase {
       double inputTranslationDir = Math.atan2(ySpeed, xSpeed);
       double inputTranslationMag = Math.sqrt(Math.pow(xSpeed, 2) + Math.pow(ySpeed, 2));
 
-      // Calculate the direction slew rate based on an estimate of the lateral
-      // acceleration
+      // Calculate the direction slew rate based on an estimate of the lateral acceleration
       double directionSlewRate;
-
-      // if there is no robot movement, direction change is instant
       if (m_currentTranslationMag != 0.0) {
         directionSlewRate = Math.abs(DriveConstants.kDirectionSlewRate / m_currentTranslationMag);
       } else {
-        directionSlewRate = 500.0; // some high number that means the slew rate is effectively instantaneous
+        directionSlewRate = 500.0; //some high number that means the slew rate is effectively instantaneous
       }
+      
 
       double currentTime = WPIUtilJNI.now() * 1e-6;
       double elapsedTime = currentTime - m_prevTime;
       double angleDif = SwerveUtils.AngleDifference(inputTranslationDir, m_currentTranslationDir);
-
-      if (angleDif < 0.45 * Math.PI) {
-        m_currentTranslationDir = SwerveUtils.StepTowardsCircular(m_currentTranslationDir, inputTranslationDir,
-            directionSlewRate * elapsedTime);
+      if (angleDif < 0.45*Math.PI) {
+        m_currentTranslationDir = SwerveUtils.StepTowardsCircular(m_currentTranslationDir, inputTranslationDir, directionSlewRate * elapsedTime);
         m_currentTranslationMag = m_magLimiter.calculate(inputTranslationMag);
-      } else if (angleDif > 0.85 * Math.PI) {
-        if (m_currentTranslationMag > 1e-4) { // some small number to avoid floating-point errors with equality checking
+      }
+      else if (angleDif > 0.85*Math.PI) {
+        if (m_currentTranslationMag > 1e-4) { //some small number to avoid floating-point errors with equality checking
           // keep currentTranslationDir unchanged
           m_currentTranslationMag = m_magLimiter.calculate(0.0);
-        } else {
+        }
+        else {
           m_currentTranslationDir = SwerveUtils.WrapAngle(m_currentTranslationDir + Math.PI);
           m_currentTranslationMag = m_magLimiter.calculate(inputTranslationMag);
         }
-      } else {
-        m_currentTranslationDir = SwerveUtils.StepTowardsCircular(m_currentTranslationDir, inputTranslationDir,
-            directionSlewRate * elapsedTime);
+      }
+      else {
+        m_currentTranslationDir = SwerveUtils.StepTowardsCircular(m_currentTranslationDir, inputTranslationDir, directionSlewRate * elapsedTime);
         m_currentTranslationMag = m_magLimiter.calculate(0.0);
       }
-
       m_prevTime = currentTime;
-
+      
       xSpeedCommanded = m_currentTranslationMag * Math.cos(m_currentTranslationDir);
       ySpeedCommanded = m_currentTranslationMag * Math.sin(m_currentTranslationDir);
       m_currentRotation = m_rotLimiter.calculate(rot);
+
 
     } else {
       xSpeedCommanded = xSpeed;
@@ -184,8 +181,7 @@ public class Drivetrain extends SubsystemBase {
 
     var swerveModuleStates = DriveConstants.kDriveKinematics.toSwerveModuleStates(
         fieldRelative
-            ? ChassisSpeeds.fromFieldRelativeSpeeds(xSpeedDelivered, ySpeedDelivered, rotDelivered,
-                Rotation2d.fromDegrees(m_gyro.getAngle()))
+            ? ChassisSpeeds.fromFieldRelativeSpeeds(xSpeedDelivered, ySpeedDelivered, rotDelivered, Rotation2d.fromDegrees(m_gyro.getAngle()))
             : new ChassisSpeeds(xSpeedDelivered, ySpeedDelivered, rotDelivered));
     SwerveDriveKinematics.desaturateWheelSpeeds(
         swerveModuleStates, DriveConstants.kMaxSpeedMetersPerSecond);
@@ -219,6 +215,20 @@ public class Drivetrain extends SubsystemBase {
     m_rearRight.setDesiredState(desiredStates[3]);
   }
 
+  /**
+   * Gets the swerve ModuleStates.
+   *
+   * @return desiredStates The desired SwerveModule states.
+   */
+  public SwerveModuleState[] getModuleStates() {
+    return new SwerveModuleState[] {
+      m_frontLeft.getState(),
+      m_frontRight.getState(),
+      m_rearLeft.getState(),
+      m_rearRight.getState()
+    };
+  }
+
   /** Resets the drive encoders to currently read a position of 0. */
   public void resetEncoders() {
     m_frontLeft.resetEncoders();
@@ -250,12 +260,29 @@ public class Drivetrain extends SubsystemBase {
     return m_gyro.getRate() * (DriveConstants.kGyroReversed ? -1.0 : 1.0);
   }
 
-  /** Prints all values to dashboard */
-  public void printToDashboard() {
-    SmartDashboard.putNumber("currentRotation: ", m_currentRotation);
-    SmartDashboard.putNumber("currentTranslationDirection: ", m_currentTranslationDir);
-    SmartDashboard.putNumber("currentTranslationMagnitude: ", m_currentTranslationMag);
-    SmartDashboard.putNumber("Heading: ", getHeading());
-    SmartDashboard.putString("Gyro", Rotation2d.fromDegrees(m_gyro.getAngle()).toString());
+   /**
+   * Initializes the auto using PathPlannerLib.
+   */
+  // TODO: Clean up code and get rid of get and set chassisSpeed methods.
+  // TODO: Set up config after physical testing.
+  public void initializeAuto() {
+    AutoBuilder.configureHolonomic(
+      this::getPose,
+      this::resetOdometry,
+      this::getChassisSpeeds,
+      this::setChassisSpeeds,
+      new HolonomicPathFollowerConfig(DriveConstants.kMaxSpeedMetersPerSecond, DriveConstants.kTrackWidth, null),
+      this
+    );
   }
+
+  public void setChassisSpeeds(ChassisSpeeds speed) {
+    this.setModuleStates(DriveConstants.kDriveKinematics.toSwerveModuleStates(speed));
+  }
+
+  public ChassisSpeeds getChassisSpeeds() {
+    return DriveConstants.kDriveKinematics.toChassisSpeeds(this.getModuleStates());
+  }
+
+  
 }
