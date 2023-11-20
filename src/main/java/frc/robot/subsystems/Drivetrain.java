@@ -7,6 +7,7 @@ package frc.robot.subsystems;
 import com.kauailabs.navx.frc.AHRS;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.util.HolonomicPathFollowerConfig;
+import com.pathplanner.lib.util.ReplanningConfig;
 
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -70,7 +71,8 @@ public class Drivetrain extends SubsystemBase {
 
   /** Creates a new DriveSubsystem. */
   public Drivetrain() {
-    // initializeAuto();
+    // TODO: Initialize auto when it's ready for testing.
+    // this.initializeAuto();
   }
 
   @Override
@@ -85,7 +87,7 @@ public class Drivetrain extends SubsystemBase {
             m_rearRight.getPosition()
         });
 
-        printToDashboard();
+    this.printToDashboard();
   }
 
   /**
@@ -220,14 +222,14 @@ public class Drivetrain extends SubsystemBase {
   /**
    * Gets the swerve ModuleStates.
    *
-   * @return desiredStates The desired SwerveModule states.
+   * @return The current SwerveModule states.
    */
   public SwerveModuleState[] getModuleStates() {
     return new SwerveModuleState[] {
-        m_frontLeft.getState(),
-        m_frontRight.getState(),
-        m_rearLeft.getState(),
-        m_rearRight.getState()
+      m_frontLeft.getState(),
+      m_frontRight.getState(),
+      m_rearLeft.getState(),
+      m_rearRight.getState()
     };
   }
 
@@ -265,24 +267,17 @@ public class Drivetrain extends SubsystemBase {
   /**
    * Initializes the auto using PathPlannerLib.
    */
-  // TODO: Clean up code and get rid of get and set chassisSpeed methods.
-  // TODO: Set up config after physical testing.
   public void initializeAuto() {
     AutoBuilder.configureHolonomic(
-        this::getPose,
-        this::resetOdometry,
-        this::getChassisSpeeds,
-        this::setChassisSpeeds,
-        new HolonomicPathFollowerConfig(DriveConstants.kMaxSpeedMetersPerSecond, DriveConstants.kTrackWidth, null),
-        this);
-  }
-
-  public void setChassisSpeeds(ChassisSpeeds speed) {
-    this.setModuleStates(DriveConstants.kDriveKinematics.toSwerveModuleStates(speed));
-  }
-
-  public ChassisSpeeds getChassisSpeeds() {
-    return DriveConstants.kDriveKinematics.toChassisSpeeds(this.getModuleStates());
+      this::getPose,
+      this::resetOdometry,
+      () -> DriveConstants.kDriveKinematics.toChassisSpeeds(this.getModuleStates()),
+      states -> this.setModuleStates(DriveConstants.kDriveKinematics.toSwerveModuleStates(states)),
+      new HolonomicPathFollowerConfig(
+        DriveConstants.kMaxSpeedMetersPerSecond,
+        DriveConstants.kTrackWidth,
+        new ReplanningConfig()),
+      this);
   }
 
   /** Prints all values to dashboard */
@@ -290,6 +285,6 @@ public class Drivetrain extends SubsystemBase {
     SmartDashboard.putNumber("currentRotation: ", m_currentRotation);
     SmartDashboard.putNumber("currentTranslationDirection: ", m_currentTranslationDir);
     SmartDashboard.putNumber("currentTranslationMagnitude: ", m_currentTranslationMag);
-    SmartDashboard.putNumber("Heading: ", getHeading());
+    SmartDashboard.putNumber("Heading: ", this.getHeading());
   }
 }
