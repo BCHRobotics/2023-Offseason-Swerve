@@ -27,7 +27,7 @@ public final class Constants {
   public static final class DriveConstants {
     // Driving Parameters - Note that these are not the maximum capable speeds of
     // the robot, rather the allowed maximum speeds
-    public static final double kMaxSpeedMetersPerSecond = 4.8;
+    public static final double kMaxSpeedMetersPerSecond = 2.0; // 4.8 to 2.0
     public static final double kMaxAngularSpeed = 2 * Math.PI; // radians per second
 
     public static final double kDirectionSlewRate = 1.4; // radians per second
@@ -54,8 +54,8 @@ public final class Constants {
 
     // SPARK MAX CAN IDs
     // TODO: Add correct CAN IDs after testing.
-    public static final int kFrontLeftDrivingCanId = 13;
-    public static final int kRearLeftDrivingCanId = 1;
+    public static final int kFrontLeftDrivingCanId = 11;
+    public static final int kRearLeftDrivingCanId = 13;
     public static final int kFrontRightDrivingCanId = 15;
     public static final int kRearRightDrivingCanId = 17;
 
