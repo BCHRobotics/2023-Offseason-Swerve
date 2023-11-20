@@ -27,7 +27,7 @@ public final class Constants {
   public static final class DriveConstants {
     // Driving Parameters - Note that these are not the maximum capable speeds of
     // the robot, rather the allowed maximum speeds
-    public static final double kMaxSpeedMetersPerSecond = 4.8;
+    public static final double kMaxSpeedMetersPerSecond = 4.8; // Changed max speed from 4.8 to 1.5.
     public static final double kMaxAngularSpeed = 2 * Math.PI; // radians per second
 
     public static final double kDirectionSlewRate = 1.4; // radians per second
@@ -35,7 +35,7 @@ public final class Constants {
     public static final double kRotationalSlewRate = 3.0; // percent per second (1 = 100%)
 
     // Chassis configuration
-    //TODO: Double check track width.
+    // TODO: Double check track width.
     public static final double kTrackWidth = Units.inchesToMeters(24.625);
     // Distance between centers of right and left wheels on robot
     public static final double kWheelBase = Units.inchesToMeters(24.625);
