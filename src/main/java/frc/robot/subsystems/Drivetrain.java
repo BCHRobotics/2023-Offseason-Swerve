@@ -291,6 +291,5 @@ public class Drivetrain extends SubsystemBase {
     SmartDashboard.putNumber("currentTranslationDirection: ", m_currentTranslationDir);
     SmartDashboard.putNumber("currentTranslationMagnitude: ", m_currentTranslationMag);
     SmartDashboard.putNumber("Heading: ", getHeading());
-    SmartDashboard.putString("Gyro", Rotation2d.fromDegrees(m_gyro.getAngle()).toString());
   }
 }
