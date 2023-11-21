@@ -75,20 +75,6 @@ public class Drivetrain extends SubsystemBase {
     // this.initializeAuto();
   }
 
-  @Override
-  public void periodic() {
-    // Update the odometry in the periodic block
-    m_odometry.update(
-        Rotation2d.fromDegrees(m_gyro.getAngle()),
-        new SwerveModulePosition[] {
-            m_frontLeft.getPosition(),
-            m_frontRight.getPosition(),
-            m_rearLeft.getPosition(),
-            m_rearRight.getPosition()
-        });
-
-    this.printToDashboard();
-  }
 
   /**
    * Returns the currently-estimated pose of the robot.
@@ -271,20 +257,46 @@ public class Drivetrain extends SubsystemBase {
     AutoBuilder.configureHolonomic(
       this::getPose,
       this::resetOdometry,
-      () -> DriveConstants.kDriveKinematics.toChassisSpeeds(this.getModuleStates()),
-      states -> this.setModuleStates(DriveConstants.kDriveKinematics.toSwerveModuleStates(states)),
+      this::getChassisSpeeds,
+      this::setChassisSpeeds,
       new HolonomicPathFollowerConfig(
         DriveConstants.kMaxSpeedMetersPerSecond,
         DriveConstants.kTrackWidth,
         new ReplanningConfig()),
       this);
   }
+  
+  /**
+   * Sets the speed of the robot chassis.
+   * @param speed The new chassis speed.
+   */
+  public void setChassisSpeeds(ChassisSpeeds speed) {
+    this.setModuleStates(DriveConstants.kDriveKinematics.toSwerveModuleStates(speed));
+  }
+
+  /**
+   * Gets the speed of the robot chassis.
+   * @return The current chassis speed.
+   */
+  public ChassisSpeeds getChassisSpeeds() {
+    return DriveConstants.kDriveKinematics.toChassisSpeeds(this.getModuleStates());
+  }
 
   /** Prints all values to dashboard */
   public void printToDashboard() {
-    SmartDashboard.putNumber("currentRotation: ", m_currentRotation);
-    SmartDashboard.putNumber("currentTranslationDirection: ", m_currentTranslationDir);
-    SmartDashboard.putNumber("currentTranslationMagnitude: ", m_currentTranslationMag);
-    SmartDashboard.putNumber("Heading: ", this.getHeading());
+    // Speed
+    SmartDashboard.putNumber("Vertical Speed", this.getChassisSpeeds().vyMetersPerSecond);
+    SmartDashboard.putNumber("Horizontal Speed", this.getChassisSpeeds().vxMetersPerSecond);
+    SmartDashboard.putNumber("Turn Speed", this.getChassisSpeeds().omegaRadiansPerSecond);
+
+    // Position
+    SmartDashboard.putNumber("X Position", this.getPose().getX());
+    SmartDashboard.putNumber("Y Position", this.getPose().getY());
+    SmartDashboard.putNumber("Gyro Heading: ", this.getHeading());
+
+    // Slew rate filter variables
+    SmartDashboard.putNumber("slewCurrentRotation: ", m_currentRotation);
+    SmartDashboard.putNumber("slewCurrentTranslationDirection: ", m_currentTranslationDir);
+    SmartDashboard.putNumber("slewCurrentTranslationMagnitude: ", m_currentTranslationMag);
   }
 }
