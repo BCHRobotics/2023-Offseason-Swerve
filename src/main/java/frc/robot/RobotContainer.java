@@ -65,6 +65,7 @@ public class RobotContainer {
             m_robotDrive));
 
     // Reset Gyro Command (Y)
+    //TODO: REMOVE FOR COMPETITION
     new JoystickButton(m_driverController, Button.kTriangle.value)
         .onTrue(new InstantCommand(
             () -> m_robotDrive.zeroHeading(),
