@@ -7,10 +7,12 @@ package frc.robot;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.PS4Controller.Button;
+import frc.robot.Constants.DriveConstants;
 import frc.robot.Constants.OIConstants;
 import frc.robot.commands.Autos;
 import frc.robot.subsystems.Drivetrain;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 
@@ -61,7 +63,18 @@ public class RobotContainer {
     new JoystickButton(m_driverController, Button.kR1.value)
         .whileTrue(new RunCommand(
             () -> m_robotDrive.setX(),
-            m_robotDrive));      
+            m_robotDrive));
+    
+    // Slow Command (LB)
+    // TODO: Make a better slowmode
+    new JoystickButton(m_driverController, Button.kL1.value)
+        .onTrue(new InstantCommand(
+            () -> DriveConstants.kMaxSpeedMetersPerSecond = 2.4,
+            m_robotDrive)).onFalse(
+                new InstantCommand(
+                    () -> DriveConstants.kMaxSpeedMetersPerSecond = 4.8, m_robotDrive
+                )
+            );  
   }
 
     /**
