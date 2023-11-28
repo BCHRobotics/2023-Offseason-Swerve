@@ -12,6 +12,7 @@ import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 import com.revrobotics.SparkMaxAbsoluteEncoder.Type;
 import com.revrobotics.SparkMaxPIDController;
+import com.revrobotics.CANSparkMax.IdleMode;
 import com.revrobotics.AbsoluteEncoder;
 import com.revrobotics.RelativeEncoder;
 
@@ -161,4 +162,25 @@ public class MAXSwerveModule {
   public void resetEncoders() {
     m_drivingEncoder.setPosition(0);
   }
+
+  /**
+   * Sets the desired IdleMode for the module.
+   *
+   * @param mode Desired IdleMode.
+   */
+  public void setIdleMode(IdleMode mode) {
+    m_drivingSparkMax.setIdleMode(mode);
+    m_turningSparkMax.setIdleMode(mode);
+
+    m_drivingSparkMax.burnFlash();
+    m_turningSparkMax.burnFlash();
+  }
+  
+
+  /** Disables each of the motors on the module */
+  public void disableModule() {
+    m_drivingSparkMax.disable();
+    m_turningSparkMax.disable();
+  }
+
 }

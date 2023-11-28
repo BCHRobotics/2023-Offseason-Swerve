@@ -8,6 +8,7 @@ import com.kauailabs.navx.frc.AHRS;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.util.HolonomicPathFollowerConfig;
 import com.pathplanner.lib.util.ReplanningConfig;
+import com.revrobotics.CANSparkMax.IdleMode;
 
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -20,8 +21,12 @@ import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.util.WPIUtilJNI;
 import edu.wpi.first.wpilibj.interfaces.Gyro;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import frc.robot.Constants.AutoConstants;
 import frc.robot.Constants.DriveConstants;
 import frc.utils.SwerveUtils;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class Drivetrain extends SubsystemBase {
@@ -57,6 +62,9 @@ public class Drivetrain extends SubsystemBase {
   private SlewRateLimiter m_magLimiter = new SlewRateLimiter(DriveConstants.kMagnitudeSlewRate);
   private SlewRateLimiter m_rotLimiter = new SlewRateLimiter(DriveConstants.kRotationalSlewRate);
   private double m_prevTime = WPIUtilJNI.now() * 1e-6;
+
+  private boolean m_slowMode = false;
+  private IdleMode m_IdleMode = IdleMode.kBrake;
 
   // Odometry class for tracking robot pose
   SwerveDriveOdometry m_odometry = new SwerveDriveOdometry(
@@ -187,12 +195,8 @@ public class Drivetrain extends SubsystemBase {
             ? ChassisSpeeds.fromFieldRelativeSpeeds(xSpeedDelivered, ySpeedDelivered, rotDelivered,
                 Rotation2d.fromDegrees(m_gyro.getAngle() * (DriveConstants.kGyroReversed ? -1.0 : 1.0)))
             : new ChassisSpeeds(xSpeedDelivered, ySpeedDelivered, rotDelivered));
-    SwerveDriveKinematics.desaturateWheelSpeeds(
-        swerveModuleStates, DriveConstants.kMaxSpeedMetersPerSecond);
-    m_frontLeft.setDesiredState(swerveModuleStates[0]);
-    m_frontRight.setDesiredState(swerveModuleStates[1]);
-    m_rearLeft.setDesiredState(swerveModuleStates[2]);
-    m_rearRight.setDesiredState(swerveModuleStates[3]);
+ 
+    this.setModuleStates(swerveModuleStates);
   }
 
   /**
@@ -212,7 +216,7 @@ public class Drivetrain extends SubsystemBase {
    */
   public void setModuleStates(SwerveModuleState[] desiredStates) {
     SwerveDriveKinematics.desaturateWheelSpeeds(
-        desiredStates, DriveConstants.kMaxSpeedMetersPerSecond);
+        desiredStates, m_slowMode ? DriveConstants.kMinSpeedMetersPerSecond : DriveConstants.kMaxSpeedMetersPerSecond);
     m_frontLeft.setDesiredState(desiredStates[0]);
     m_frontRight.setDesiredState(desiredStates[1]);
     m_rearLeft.setDesiredState(desiredStates[2]);
@@ -256,12 +260,46 @@ public class Drivetrain extends SubsystemBase {
   }
 
   /**
-   * Returns the turn rate of the robot.
+   * Enables and disables slow mode.
    *
-   * @return The turn rate of the robot, in degrees per second
+   * @param mode Whether to enable slow mode on or off.
    */
-  public double getTurnRate() {
-    return m_gyro.getRate() * (DriveConstants.kGyroReversed ? -1.0 : 1.0);
+  public void setSlowMode(boolean mode) {
+    this.m_slowMode = mode;
+  }
+
+  /**
+   * Sets brake or coast mode.
+   *
+   * @param mode Whether to enable brake or coast mode.
+   */
+  public void setMode(IdleMode mode) {
+    m_frontLeft.setIdleMode(mode);
+    m_frontRight.setIdleMode(mode);
+    m_rearLeft.setIdleMode(mode);
+    m_rearRight.setIdleMode(mode);
+  }
+
+  public Command switchMode() {
+    return new InstantCommand(() -> {
+      if (m_IdleMode.equals(IdleMode.kBrake)) {
+          this.setMode(IdleMode.kCoast);
+      } else if (m_IdleMode.equals(IdleMode.kCoast)) {
+          this.setMode(IdleMode.kBrake);
+      }
+    }, this);
+  }
+
+  public Command forceStop() {
+    return new RunCommand(() -> {
+      this.setX();
+      this.setMode(IdleMode.kBrake);
+
+      m_frontLeft.disableModule();
+      m_frontRight.disableModule();
+      m_rearLeft.disableModule();
+      m_rearRight.disableModule();
+    }, this);
   }
 
   /**
@@ -274,7 +312,7 @@ public class Drivetrain extends SubsystemBase {
       this::getChassisSpeeds,
       this::setChassisSpeeds,
       new HolonomicPathFollowerConfig(
-        DriveConstants.kMaxSpeedMetersPerSecond,
+        AutoConstants.kMaxSpeedMetersPerSecond,
         DriveConstants.kTrackWidth,
         new ReplanningConfig()),
       this);
