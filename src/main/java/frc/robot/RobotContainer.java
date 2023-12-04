@@ -68,17 +68,7 @@ public class RobotContainer {
     // TODO: Test Slow Command later
     new JoystickButton(m_driverController, Button.kL1.value)
         .onTrue(new InstantCommand(() -> m_robotDrive.setSlowMode(true), m_robotDrive))
-        .onFalse(new InstantCommand(() -> m_robotDrive.setSlowMode(false), m_robotDrive));
-
-    // Switch Mode Command (Y)
-    // TODO: Test Switch mode later
-    // TODO: Remove for competition
-    new JoystickButton(m_driverController, Button.kTriangle.value).onTrue(m_robotDrive.switchMode());
-
-    // Force Stop Command (RT)
-    new JoystickButton(m_driverController, Button.kR1.value).whileTrue(m_robotDrive.forceStop());
-
-    
+        .onFalse(new InstantCommand(() -> m_robotDrive.setSlowMode(false), m_robotDrive));    
   }
 
     /**
