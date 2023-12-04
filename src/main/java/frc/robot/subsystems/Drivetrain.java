@@ -5,6 +5,10 @@
 package frc.robot.subsystems;
 
 import com.kauailabs.navx.frc.AHRS;
+import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.util.HolonomicPathFollowerConfig;
+import com.pathplanner.lib.util.ReplanningConfig;
+import com.revrobotics.CANSparkMax.IdleMode;
 
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -17,8 +21,12 @@ import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.util.WPIUtilJNI;
 import edu.wpi.first.wpilibj.interfaces.Gyro;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import frc.robot.Constants.AutoConstants;
 import frc.robot.Constants.DriveConstants;
 import frc.utils.SwerveUtils;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class Drivetrain extends SubsystemBase {
@@ -55,10 +63,13 @@ public class Drivetrain extends SubsystemBase {
   private SlewRateLimiter m_rotLimiter = new SlewRateLimiter(DriveConstants.kRotationalSlewRate);
   private double m_prevTime = WPIUtilJNI.now() * 1e-6;
 
+  private boolean m_slowMode = false;
+  private IdleMode m_IdleMode = IdleMode.kBrake;
+
   // Odometry class for tracking robot pose
   SwerveDriveOdometry m_odometry = new SwerveDriveOdometry(
       DriveConstants.kDriveKinematics,
-      Rotation2d.fromDegrees(m_gyro.getAngle()),
+      Rotation2d.fromDegrees(m_gyro.getAngle() * (DriveConstants.kGyroReversed ? -1.0 : 1.0)),
       new SwerveModulePosition[] {
           m_frontLeft.getPosition(),
           m_frontRight.getPosition(),
@@ -68,13 +79,15 @@ public class Drivetrain extends SubsystemBase {
 
   /** Creates a new DriveSubsystem. */
   public Drivetrain() {
+    // TODO: Initialize auto when it's ready for testing.
+    // this.initializeAuto();
   }
 
   @Override
   public void periodic() {
     // Update the odometry in the periodic block
     m_odometry.update(
-        Rotation2d.fromDegrees(m_gyro.getAngle()),
+        Rotation2d.fromDegrees(m_gyro.getAngle() * (DriveConstants.kGyroReversed ? -1.0 : 1.0)),
         new SwerveModulePosition[] {
             m_frontLeft.getPosition(),
             m_frontRight.getPosition(),
@@ -82,8 +95,7 @@ public class Drivetrain extends SubsystemBase {
             m_rearRight.getPosition()
         });
 
-    // print to dashboard
-    printToDashboard();
+    this.printToDashboard();
   }
 
   /**
@@ -102,7 +114,7 @@ public class Drivetrain extends SubsystemBase {
    */
   public void resetOdometry(Pose2d pose) {
     m_odometry.resetPosition(
-        Rotation2d.fromDegrees(m_gyro.getAngle()),
+        Rotation2d.fromDegrees(m_gyro.getAngle() * (DriveConstants.kGyroReversed ? -1.0 : 1.0)),
         new SwerveModulePosition[] {
             m_frontLeft.getPosition(),
             m_frontRight.getPosition(),
@@ -135,8 +147,6 @@ public class Drivetrain extends SubsystemBase {
       // Calculate the direction slew rate based on an estimate of the lateral
       // acceleration
       double directionSlewRate;
-
-      // if there is no robot movement, direction change is instant
       if (m_currentTranslationMag != 0.0) {
         directionSlewRate = Math.abs(DriveConstants.kDirectionSlewRate / m_currentTranslationMag);
       } else {
@@ -146,7 +156,6 @@ public class Drivetrain extends SubsystemBase {
       double currentTime = WPIUtilJNI.now() * 1e-6;
       double elapsedTime = currentTime - m_prevTime;
       double angleDif = SwerveUtils.AngleDifference(inputTranslationDir, m_currentTranslationDir);
-
       if (angleDif < 0.45 * Math.PI) {
         m_currentTranslationDir = SwerveUtils.StepTowardsCircular(m_currentTranslationDir, inputTranslationDir,
             directionSlewRate * elapsedTime);
@@ -164,7 +173,6 @@ public class Drivetrain extends SubsystemBase {
             directionSlewRate * elapsedTime);
         m_currentTranslationMag = m_magLimiter.calculate(0.0);
       }
-
       m_prevTime = currentTime;
 
       xSpeedCommanded = m_currentTranslationMag * Math.cos(m_currentTranslationDir);
@@ -185,14 +193,10 @@ public class Drivetrain extends SubsystemBase {
     var swerveModuleStates = DriveConstants.kDriveKinematics.toSwerveModuleStates(
         fieldRelative
             ? ChassisSpeeds.fromFieldRelativeSpeeds(xSpeedDelivered, ySpeedDelivered, rotDelivered,
-                Rotation2d.fromDegrees(m_gyro.getAngle()))
+                Rotation2d.fromDegrees(m_gyro.getAngle() * (DriveConstants.kGyroReversed ? -1.0 : 1.0)))
             : new ChassisSpeeds(xSpeedDelivered, ySpeedDelivered, rotDelivered));
-    SwerveDriveKinematics.desaturateWheelSpeeds(
-        swerveModuleStates, DriveConstants.kMaxSpeedMetersPerSecond);
-    m_frontLeft.setDesiredState(swerveModuleStates[0]);
-    m_frontRight.setDesiredState(swerveModuleStates[1]);
-    m_rearLeft.setDesiredState(swerveModuleStates[2]);
-    m_rearRight.setDesiredState(swerveModuleStates[3]);
+ 
+    this.setModuleStates(swerveModuleStates);
   }
 
   /**
@@ -212,11 +216,25 @@ public class Drivetrain extends SubsystemBase {
    */
   public void setModuleStates(SwerveModuleState[] desiredStates) {
     SwerveDriveKinematics.desaturateWheelSpeeds(
-        desiredStates, DriveConstants.kMaxSpeedMetersPerSecond);
+        desiredStates, m_slowMode ? DriveConstants.kMinSpeedMetersPerSecond : DriveConstants.kMaxSpeedMetersPerSecond);
     m_frontLeft.setDesiredState(desiredStates[0]);
     m_frontRight.setDesiredState(desiredStates[1]);
     m_rearLeft.setDesiredState(desiredStates[2]);
     m_rearRight.setDesiredState(desiredStates[3]);
+  }
+
+  /**
+   * Gets the swerve ModuleStates.
+   *
+   * @return The current SwerveModule states.
+   */
+  public SwerveModuleState[] getModuleStates() {
+    return new SwerveModuleState[] {
+      m_frontLeft.getState(),
+      m_frontRight.getState(),
+      m_rearLeft.getState(),
+      m_rearRight.getState()
+    };
   }
 
   /** Resets the drive encoders to currently read a position of 0. */
@@ -242,20 +260,95 @@ public class Drivetrain extends SubsystemBase {
   }
 
   /**
-   * Returns the turn rate of the robot.
+   * Enables and disables slow mode.
    *
-   * @return The turn rate of the robot, in degrees per second
+   * @param mode Whether to enable slow mode on or off.
    */
-  public double getTurnRate() {
-    return m_gyro.getRate() * (DriveConstants.kGyroReversed ? -1.0 : 1.0);
+  public void setSlowMode(boolean mode) {
+    this.m_slowMode = mode;
+  }
+
+  /**
+   * Sets brake or coast mode.
+   *
+   * @param mode Whether to enable brake or coast mode.
+   */
+  public void setMode(IdleMode mode) {
+    m_frontLeft.setIdleMode(mode);
+    m_frontRight.setIdleMode(mode);
+    m_rearLeft.setIdleMode(mode);
+    m_rearRight.setIdleMode(mode);
+  }
+
+  public Command switchMode() {
+    return new InstantCommand(() -> {
+      if (m_IdleMode.equals(IdleMode.kBrake)) {
+          this.setMode(IdleMode.kCoast);
+      } else if (m_IdleMode.equals(IdleMode.kCoast)) {
+          this.setMode(IdleMode.kBrake);
+      }
+    }, this);
+  }
+
+  public Command forceStop() {
+    return new RunCommand(() -> {
+      this.setX();
+      this.setMode(IdleMode.kBrake);
+
+      m_frontLeft.disableModule();
+      m_frontRight.disableModule();
+      m_rearLeft.disableModule();
+      m_rearRight.disableModule();
+    }, this);
+  }
+
+  /**
+   * Initializes the auto using PathPlannerLib.
+   */
+  public void initializeAuto() {
+    AutoBuilder.configureHolonomic(
+      this::getPose,
+      this::resetOdometry,
+      this::getChassisSpeeds,
+      this::setChassisSpeeds,
+      new HolonomicPathFollowerConfig(
+        AutoConstants.kMaxSpeedMetersPerSecond,
+        DriveConstants.kTrackWidth,
+        new ReplanningConfig()),
+      this);
+  }
+  
+  /**
+   * Sets the speed of the robot chassis.
+   * @param speed The new chassis speed.
+   */
+  public void setChassisSpeeds(ChassisSpeeds speed) {
+    this.setModuleStates(DriveConstants.kDriveKinematics.toSwerveModuleStates(speed));
+  }
+
+  /**
+   * Gets the speed of the robot chassis.
+   * @return The current chassis speed.
+   */
+  public ChassisSpeeds getChassisSpeeds() {
+    return DriveConstants.kDriveKinematics.toChassisSpeeds(this.getModuleStates());
   }
 
   /** Prints all values to dashboard */
   public void printToDashboard() {
-    SmartDashboard.putNumber("currentRotation: ", m_currentRotation);
-    SmartDashboard.putNumber("currentTranslationDirection: ", m_currentTranslationDir);
-    SmartDashboard.putNumber("currentTranslationMagnitude: ", m_currentTranslationMag);
-    SmartDashboard.putNumber("Heading: ", getHeading());
-    SmartDashboard.putString("Gyro", Rotation2d.fromDegrees(m_gyro.getAngle()).toString());
+    // Speed
+    SmartDashboard.putNumber("Vertical Speed", this.getChassisSpeeds().vyMetersPerSecond);
+    SmartDashboard.putNumber("Horizontal Speed", this.getChassisSpeeds().vxMetersPerSecond);
+    SmartDashboard.putNumber("Turn Speed", this.getChassisSpeeds().omegaRadiansPerSecond);
+
+    // Position
+    SmartDashboard.putNumber("X Position", this.getPose().getX());
+    SmartDashboard.putNumber("Y Position", this.getPose().getY());
+    SmartDashboard.putNumber("Gyro Heading: ", this.getHeading());
+
+    // Slew rate filter variables
+    SmartDashboard.putNumber("slewCurrentRotation: ", m_currentRotation);
+    SmartDashboard.putNumber("slewCurrentTranslationDirection: ", m_currentTranslationDir);
+    SmartDashboard.putNumber("slewCurrentTranslationMagnitude: ", m_currentTranslationMag);
   }
 }

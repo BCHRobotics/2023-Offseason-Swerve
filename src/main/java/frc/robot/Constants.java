@@ -25,9 +25,10 @@ import edu.wpi.first.math.util.Units;
  */
 public final class Constants {
   public static final class DriveConstants {
-    // Driving Parameters - Note that these are not the maximum capable speeds of
-    // the robot, rather the allowed maximum speeds
-    public static final double kMaxSpeedMetersPerSecond = 4.8;
+    // Driving Parameters - Note that these are not the maximum and minimum capable speeds of
+    // the robot, rather the allowed maximum and minimum speeds.
+    public static final double kMaxSpeedMetersPerSecond = 4.8; 
+    public static final double kMinSpeedMetersPerSecond = 2.4;
     public static final double kMaxAngularSpeed = 2 * Math.PI; // radians per second
 
     public static final double kDirectionSlewRate = 1.4; // radians per second
@@ -35,7 +36,6 @@ public final class Constants {
     public static final double kRotationalSlewRate = 3.0; // percent per second (1 = 100%)
 
     // Chassis configuration
-    //TODO: Double check track width
     public static final double kTrackWidth = Units.inchesToMeters(24.625);
     // Distance between centers of right and left wheels on robot
     public static final double kWheelBase = Units.inchesToMeters(24.625);
@@ -53,9 +53,8 @@ public final class Constants {
     public static final double kBackRightChassisAngularOffset = Math.PI / 2;
 
     // SPARK MAX CAN IDs
-    // TODO: Add correct CAN IDs after testing.
-    public static final int kFrontLeftDrivingCanId = 13;
-    public static final int kRearLeftDrivingCanId = 1;
+    public static final int kFrontLeftDrivingCanId = 11;
+    public static final int kRearLeftDrivingCanId = 13;
     public static final int kFrontRightDrivingCanId = 15;
     public static final int kRearRightDrivingCanId = 17;
 
@@ -64,7 +63,7 @@ public final class Constants {
     public static final int kFrontRightTurningCanId = 14;
     public static final int kRearRightTurningCanId = 16;
 
-    public static final boolean kGyroReversed = false;
+    public static final boolean kGyroReversed = true;
   }
 
   public static final class ModuleConstants {
@@ -125,6 +124,8 @@ public final class Constants {
   public static final class OIConstants {
     public static final int kDriverControllerPort = 0;
     public static final double kDriveDeadband = 0.05;
+    public static final boolean kFieldRelative = true;
+    public static final boolean kRateLimited = true;
   }
 
   public static final class AutoConstants {

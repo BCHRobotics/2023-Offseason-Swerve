@@ -11,6 +11,7 @@ import frc.robot.Constants.OIConstants;
 import frc.robot.commands.Autos;
 import frc.robot.subsystems.Drivetrain;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 
@@ -32,7 +33,7 @@ public class RobotContainer {
    */
   public RobotContainer() {
     // Configure the button bindings
-    configureButtonBindings();
+    this.configureButtonBindings();
 
     // Configure default commands
     m_robotDrive.setDefaultCommand(
@@ -43,7 +44,7 @@ public class RobotContainer {
                 -MathUtil.applyDeadband(m_driverController.getLeftY(), OIConstants.kDriveDeadband),
                 -MathUtil.applyDeadband(m_driverController.getLeftX(), OIConstants.kDriveDeadband),
                 -MathUtil.applyDeadband(m_driverController.getRightX(), OIConstants.kDriveDeadband),
-                true, true),
+                OIConstants.kFieldRelative, OIConstants.kRateLimited),
             m_robotDrive));
   }
 
@@ -56,11 +57,28 @@ public class RobotContainer {
    * passing it to a
    * {@link JoystickButton}.
    */
+  // TODO: Add different classes for different commands.
   private void configureButtonBindings() {
+    // Break Command (RB)
+    // TODO: Remove when new break command is tested
     new JoystickButton(m_driverController, Button.kR1.value)
-        .whileTrue(new RunCommand(
-            () -> m_robotDrive.setX(),
-            m_robotDrive));
+        .whileTrue(new RunCommand(() -> m_robotDrive.setX(), m_robotDrive));
+    
+    // Slow Command (LB)
+    // TODO: Test Slow Command later
+    new JoystickButton(m_driverController, Button.kL1.value)
+        .onTrue(new InstantCommand(() -> m_robotDrive.setSlowMode(true), m_robotDrive))
+        .onFalse(new InstantCommand(() -> m_robotDrive.setSlowMode(false), m_robotDrive));
+
+    // Switch Mode Command (Y)
+    // TODO: Test Switch mode later
+    // TODO: Remove for competition
+    new JoystickButton(m_driverController, Button.kTriangle.value).onTrue(m_robotDrive.switchMode());
+
+    // Force Stop Command (RT)
+    new JoystickButton(m_driverController, Button.kR1.value).whileTrue(m_robotDrive.forceStop());
+
+    
   }
 
     /**
