@@ -311,5 +311,12 @@ public class Drivetrain extends SubsystemBase {
     SmartDashboard.putNumber("slewCurrentRotation: ", m_currentRotation);
     SmartDashboard.putNumber("slewCurrentTranslationDirection: ", m_currentTranslationDir);
     SmartDashboard.putNumber("slewCurrentTranslationMagnitude: ", m_currentTranslationMag);
+
+    // Encoder values
+    SmartDashboard.putNumberArray("Front left Encoder", m_frontLeft.encoderValues());
+    SmartDashboard.putNumberArray("Front right Encoder", m_frontRight.encoderValues());
+    SmartDashboard.putNumberArray("Rear left Encoder", m_rearLeft.encoderValues());
+    SmartDashboard.putNumberArray("Rear right Encoder", m_rearRight.encoderValues());
+
   }
 }
