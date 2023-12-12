@@ -22,54 +22,57 @@ import edu.wpi.first.wpilibj2.command.button.JoystickButton;
  * (including subsystems, commands, and button mappings) should be declared here.
  */
 public class RobotContainer {
-  // The robot's subsystems
-  private final Drivetrain m_robotDrive = new Drivetrain();
+    // The robot's subsystems
+    private final Drivetrain m_robotDrive = new Drivetrain();
 
-  // The driver's controller
-  XboxController m_driverController = new XboxController(OIConstants.kDriverControllerPort);
+    // The driver's controller
+    XboxController m_driverController = new XboxController(OIConstants.kDriverControllerPort);
 
-  /**
-   * The container for the robot. Contains subsystems, OI devices, and commands.
-   */
-  public RobotContainer() {
-    // Configure the button bindings
-    this.configureButtonBindings();
+    /**
+     * The container for the robot. Contains subsystems, OI devices, and commands.
+     */
+    public RobotContainer() {
+        // Configure the button bindings
+        this.configureButtonBindings();
 
-    // Configure default commands
-    m_robotDrive.setDefaultCommand(
-        // The left stick controls translation of the robot.
-        // Turning is controlled by the X axis of the right stick.
-        new RunCommand(
-            () -> m_robotDrive.drive(
-                -MathUtil.applyDeadband(m_driverController.getLeftY(), OIConstants.kDriveDeadband),
-                -MathUtil.applyDeadband(m_driverController.getLeftX(), OIConstants.kDriveDeadband),
-                -MathUtil.applyDeadband(m_driverController.getRightX(), OIConstants.kDriveDeadband),
-                OIConstants.kFieldRelative, OIConstants.kRateLimited),
-            m_robotDrive));
-  }
+        // Configure default commands
+        m_robotDrive.setDefaultCommand(
+                // The left stick controls translation of the robot.
+                // Turning is controlled by the X axis of the right stick.
+                new RunCommand(
+                        () -> m_robotDrive.drive(
+                                -MathUtil.applyDeadband(m_driverController.getLeftY(), OIConstants.kDriveDeadband),
+                                -MathUtil.applyDeadband(m_driverController.getLeftX(), OIConstants.kDriveDeadband),
+                                -MathUtil.applyDeadband(m_driverController.getRightX(), OIConstants.kDriveDeadband),
+                                OIConstants.kFieldRelative, OIConstants.kRateLimited),
+                        m_robotDrive));
+    }
 
-  /**
-   * Use this method to define your button->command mappings. Buttons can be
-   * created by
-   * instantiating a {@link edu.wpi.first.wpilibj.GenericHID} or one of its
-   * subclasses ({@link
-   * edu.wpi.first.wpilibj.Joystick} or {@link XboxController}), and then calling
-   * passing it to a
-   * {@link JoystickButton}.
-   */
-  // TODO: Add different classes for different commands.
-  private void configureButtonBindings() {
-    // Break Command (RB)
-    // TODO: Remove when new break command is tested
-    new JoystickButton(m_driverController, Button.kR1.value)
-        .whileTrue(new RunCommand(() -> m_robotDrive.setX(), m_robotDrive));
-    
-    // Slow Command (LB)
-    // TODO: Test Slow Command later
-    new JoystickButton(m_driverController, Button.kL1.value)
-        .onTrue(new InstantCommand(() -> m_robotDrive.setSlowMode(true), m_robotDrive))
-        .onFalse(new InstantCommand(() -> m_robotDrive.setSlowMode(false), m_robotDrive));    
-  }
+    /**
+     * Use this method to define your button->command mappings. Buttons can be
+     * created by
+     * instantiating a {@link edu.wpi.first.wpilibj.GenericHID} or one of its
+     * subclasses ({@link
+     * edu.wpi.first.wpilibj.Joystick} or {@link XboxController}), and then calling
+     * passing it to a
+     * {@link JoystickButton}.
+     */
+    // TODO: Add different classes for different commands.
+    private void configureButtonBindings() {
+        // Break Command (RB)
+        // TODO: Remove when new break command is tested
+        new JoystickButton(m_driverController, Button.kR1.value)
+                .whileTrue(new RunCommand(() -> m_robotDrive.setX(), m_robotDrive));
+
+        // Slow Command (LB)
+        // TODO: Test Slow Command later
+        new JoystickButton(m_driverController, Button.kL1.value)
+                .onTrue(new InstantCommand(() -> m_robotDrive.setSlowMode(true), m_robotDrive))
+                .onFalse(new InstantCommand(() -> m_robotDrive.setSlowMode(false), m_robotDrive));
+
+        new JoystickButton(m_driverController, Button.kTriangle.value)
+                .onTrue(new InstantCommand(() -> m_robotDrive.zeroHeading(), m_robotDrive));
+    }
 
     /**
      * Use this to pass the autonomous command to the main {@link Robot} class.
