@@ -22,18 +22,18 @@ import edu.wpi.first.wpilibj2.command.button.JoystickButton;
  * (including subsystems, commands, and button mappings) should be declared here.
  */
 public class RobotContainer {
-  // The robot's subsystems
-  private final Drivetrain m_robotDrive = new Drivetrain();
+    // The robot's subsystems
+    private final Drivetrain m_robotDrive = new Drivetrain();
 
   // The driver's controller
   Joystick m_driverController = new Joystick(OIConstants.kDriverControllerPort);
 
-  /**
-   * The container for the robot. Contains subsystems, OI devices, and commands.
-   */
-  public RobotContainer() {
-    // Configure the button bindings
-    this.configureButtonBindings();
+    /**
+     * The container for the robot. Contains subsystems, OI devices, and commands.
+     */
+    public RobotContainer() {
+        // Configure the button bindings
+        this.configureButtonBindings();
 
     // Configure default commands
     m_robotDrive.setDefaultCommand(
