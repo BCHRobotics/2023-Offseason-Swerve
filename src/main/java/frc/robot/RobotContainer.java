@@ -5,8 +5,8 @@
 package frc.robot;
 
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.XboxController;
-import edu.wpi.first.wpilibj.PS4Controller.Button;
 import frc.robot.Constants.OIConstants;
 import frc.robot.commands.Autos;
 import frc.robot.subsystems.Drivetrain;
@@ -26,7 +26,7 @@ public class RobotContainer {
   private final Drivetrain m_robotDrive = new Drivetrain();
 
   // The driver's controller
-  XboxController m_driverController = new XboxController(OIConstants.kDriverControllerPort);
+  Joystick m_driverController = new Joystick(OIConstants.kDriverControllerPort);
 
   /**
    * The container for the robot. Contains subsystems, OI devices, and commands.
@@ -41,9 +41,9 @@ public class RobotContainer {
         // Turning is controlled by the X axis of the right stick.
         new RunCommand(
             () -> m_robotDrive.drive(
-                -MathUtil.applyDeadband(m_driverController.getLeftY(), OIConstants.kDriveDeadband),
-                -MathUtil.applyDeadband(m_driverController.getLeftX(), OIConstants.kDriveDeadband),
-                -MathUtil.applyDeadband(m_driverController.getRightX(), OIConstants.kDriveDeadband),
+                -MathUtil.applyDeadband(m_driverController.getY(), OIConstants.kDriveDeadband),
+                -MathUtil.applyDeadband(m_driverController.getX(), OIConstants.kDriveDeadband),
+                -MathUtil.applyDeadband(m_driverController.getTwist(), OIConstants.kTwistDeadband),
                 OIConstants.kFieldRelative, OIConstants.kRateLimited),
             m_robotDrive));
   }
@@ -61,12 +61,16 @@ public class RobotContainer {
   private void configureButtonBindings() {
     // Break Command (RB)
     // TODO: Remove when new break command is tested
-    new JoystickButton(m_driverController, Button.kR1.value)
+    new JoystickButton(m_driverController, 2)
         .whileTrue(new RunCommand(() -> m_robotDrive.setX(), m_robotDrive));
+
+    //Zero heading (reset gyro yaw)
+    // new JoystickButton(m_driverController, 12)
+    // .onTrue(new RunCommand(() -> m_robotDrive.zeroHeading(), m_robotDrive));
     
     // Slow Command (LB)
     // TODO: Test Slow Command later
-    new JoystickButton(m_driverController, Button.kL1.value)
+    new JoystickButton(m_driverController, 1)
         .onTrue(new InstantCommand(() -> m_robotDrive.setSlowMode(true), m_robotDrive))
         .onFalse(new InstantCommand(() -> m_robotDrive.setSlowMode(false), m_robotDrive));    
   }
