@@ -65,8 +65,8 @@ public class RobotContainer {
         .whileTrue(new RunCommand(() -> m_robotDrive.setX(), m_robotDrive));
 
     //Zero heading (reset gyro yaw)
-    // new JoystickButton(m_driverController, 12)
-    // .onTrue(new RunCommand(() -> m_robotDrive.zeroHeading(), m_robotDrive));
+    new JoystickButton(m_driverController, 5)
+    .whileTrue(new RunCommand(() -> m_robotDrive.zeroHeading(), m_robotDrive));
     
     // Slow Command (LB)
     // TODO: Test Slow Command later
