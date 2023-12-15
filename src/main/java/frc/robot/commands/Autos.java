@@ -2,8 +2,8 @@ package frc.robot.commands;
 
 import java.util.List;
 
-import com.pathplanner.lib.auto.AutoBuilder;
-import com.pathplanner.lib.path.PathPlannerPath;
+import com.pathplanner.lib.PathConstraints;
+import com.pathplanner.lib.PathPlanner;
 
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
@@ -20,7 +20,6 @@ import frc.robot.Constants.DriveConstants;
 import frc.robot.subsystems.Drivetrain;
 
 public class Autos {
-
    /**
    * A basic auto that moves in an 's'curve path.
    *
@@ -83,7 +82,8 @@ public class Autos {
    * @return Advanced Auto Command
    */
   public static Command getAdvancedAuto(Drivetrain m_robotDrive) {
-    return AutoBuilder.followPathWithEvents(PathPlannerPath.fromPathFile("AdvancedAuto"));
+
+    return m_robotDrive.autoBase.followPath(PathPlanner.loadPath("AdvancedAuto.path", new PathConstraints(1.6, 1.5)));
   }
   
 }
