@@ -58,22 +58,24 @@ public class RobotContainer {
    * {@link JoystickButton}.
    */
   // TODO: Add different classes for different commands.
-  private void configureButtonBindings() {
-    // Break Command (RB)
+    private void configureButtonBindings() {
+
+    // Break Command (Button 2)
     // TODO: Remove when new break command is tested
     new JoystickButton(m_driverController, 2)
         .whileTrue(new RunCommand(() -> m_robotDrive.setX(), m_robotDrive));
 
-    //Zero heading (reset gyro yaw)
+    //Zero heading (Button 5)
+    //TODO: Add a function to revert to field heading
     new JoystickButton(m_driverController, 5)
     .whileTrue(new RunCommand(() -> m_robotDrive.zeroHeading(), m_robotDrive));
     
-    // Slow Command (LB)
+    // Slow Command (Button 1)
     // TODO: Test Slow Command later
     new JoystickButton(m_driverController, 1)
         .onTrue(new InstantCommand(() -> m_robotDrive.setSlowMode(true), m_robotDrive))
         .onFalse(new InstantCommand(() -> m_robotDrive.setSlowMode(false), m_robotDrive));    
-  }
+    }
 
     /**
      * Use this to pass the autonomous command to the main {@link Robot} class.
