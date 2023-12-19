@@ -4,12 +4,7 @@
 
 package frc.robot.subsystems;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import com.kauailabs.navx.frc.AHRS;
-import com.pathplanner.lib.auto.PIDConstants;
-import com.pathplanner.lib.auto.SwerveAutoBuilder;
 
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -22,11 +17,8 @@ import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.util.WPIUtilJNI;
 import edu.wpi.first.wpilibj.interfaces.Gyro;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import frc.robot.Constants.AutoConstants;
 import frc.robot.Constants.DriveConstants;
-import frc.robot.Constants.ModuleConstants;
 import frc.utils.SwerveUtils;
-import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class Drivetrain extends SubsystemBase {
@@ -64,7 +56,6 @@ public class Drivetrain extends SubsystemBase {
   private double m_prevTime = WPIUtilJNI.now() * 1e-6;
 
   private boolean m_slowMode = false;
-  public SwerveAutoBuilder autoBase;
 
   // Odometry class for tracking robot pose
   SwerveDriveOdometry m_odometry = new SwerveDriveOdometry(
@@ -273,17 +264,6 @@ public class Drivetrain extends SubsystemBase {
    * Initializes the auto using PathPlannerLib.
    */
   public void initializeAuto() {
-    Map<String, Command> eventMap = new HashMap<>();
-
-    autoBase = new SwerveAutoBuilder(
-      this::getPose,
-      this::resetOdometry, 
-      new PIDConstants(ModuleConstants.kDrivingP, ModuleConstants.kDrivingI, ModuleConstants.kDrivingD),
-      new PIDConstants(ModuleConstants.kTurningD, ModuleConstants.kTurningI, ModuleConstants.kTurningD),
-      this::setChassisSpeeds,
-      eventMap, 
-      this
-    );
   }
   
   /**

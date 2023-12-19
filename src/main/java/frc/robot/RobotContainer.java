@@ -81,6 +81,6 @@ public class RobotContainer {
      * @return the command to run in autonomous
      */
     public Command getAutonomousCommand() {
-        return Autos.getAdvancedAuto(m_robotDrive);
+        return Autos.getBasicAuto(m_robotDrive);
     }
 }

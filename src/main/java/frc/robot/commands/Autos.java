@@ -2,9 +2,6 @@ package frc.robot.commands;
 
 import java.util.List;
 
-import com.pathplanner.lib.PathConstraints;
-import com.pathplanner.lib.PathPlanner;
-
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -39,17 +36,10 @@ public class Autos {
         new Pose2d(0, 0, new Rotation2d(0)),
         // Pass through these eight  interior waypoints, making an '8' curve path
         List.of(
-          new Translation2d(0.25, 0.75),
-          new Translation2d(1, 1), 
-          new Translation2d(2, 0),
-          new Translation2d(3, -1),
-          new Translation2d(4, 0),
-          new Translation2d(3, 1),
-          new Translation2d(2, 0),
-          new Translation2d(1, -1)
+          new Translation2d(1, 1)
         ),
         // End at the beginning.
-        new Pose2d(0, 0, new Rotation2d(0)),
+        new Pose2d(2, 0, new Rotation2d(0)),
         config);
 
     var thetaController = new ProfiledPIDController(
@@ -74,16 +64,4 @@ public class Autos {
     // Run path following command, then stop at the end.
     return swerveControllerCommand.andThen(() -> m_robotDrive.drive(0, 0, 0, false, false));
   }
-
-
-   /**
-   * An advanced auto that moves in a circular path.
-   *
-   * @return Advanced Auto Command
-   */
-  public static Command getAdvancedAuto(Drivetrain m_robotDrive) {
-
-    return m_robotDrive.autoBase.followPath(PathPlanner.loadPath("AdvancedAuto.path", new PathConstraints(1.6, 1.5)));
-  }
-  
 }
