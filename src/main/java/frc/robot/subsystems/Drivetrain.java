@@ -5,10 +5,6 @@
 package frc.robot.subsystems;
 
 import com.kauailabs.navx.frc.AHRS;
-import com.pathplanner.lib.auto.AutoBuilder;
-import com.pathplanner.lib.util.HolonomicPathFollowerConfig;
-import com.pathplanner.lib.util.ReplanningConfig;
-import com.revrobotics.CANSparkMax.IdleMode;
 
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -21,12 +17,8 @@ import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.util.WPIUtilJNI;
 import edu.wpi.first.wpilibj.interfaces.Gyro;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import frc.robot.Constants.AutoConstants;
 import frc.robot.Constants.DriveConstants;
 import frc.utils.SwerveUtils;
-import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.InstantCommand;
-import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class Drivetrain extends SubsystemBase {
@@ -64,7 +56,6 @@ public class Drivetrain extends SubsystemBase {
   private double m_prevTime = WPIUtilJNI.now() * 1e-6;
 
   private boolean m_slowMode = false;
-  private IdleMode m_IdleMode = IdleMode.kBrake;
 
   // Odometry class for tracking robot pose
   SwerveDriveOdometry m_odometry = new SwerveDriveOdometry(
@@ -80,7 +71,8 @@ public class Drivetrain extends SubsystemBase {
   /** Creates a new DriveSubsystem. */
   public Drivetrain() {
     // TODO: Initialize auto when it's ready for testing.
-    // this.initializeAuto();
+    this.initializeAuto();
+
   }
 
   @Override
@@ -269,53 +261,9 @@ public class Drivetrain extends SubsystemBase {
   }
 
   /**
-   * Sets brake or coast mode.
-   *
-   * @param mode Whether to enable brake or coast mode.
-   */
-  public void setMode(IdleMode mode) {
-    m_frontLeft.setIdleMode(mode);
-    m_frontRight.setIdleMode(mode);
-    m_rearLeft.setIdleMode(mode);
-    m_rearRight.setIdleMode(mode);
-  }
-
-  public Command switchMode() {
-    return new InstantCommand(() -> {
-      if (m_IdleMode.equals(IdleMode.kBrake)) {
-          this.setMode(IdleMode.kCoast);
-      } else if (m_IdleMode.equals(IdleMode.kCoast)) {
-          this.setMode(IdleMode.kBrake);
-      }
-    }, this);
-  }
-
-  public Command forceStop() {
-    return new RunCommand(() -> {
-      this.setX();
-      this.setMode(IdleMode.kBrake);
-
-      m_frontLeft.disableModule();
-      m_frontRight.disableModule();
-      m_rearLeft.disableModule();
-      m_rearRight.disableModule();
-    }, this);
-  }
-
-  /**
    * Initializes the auto using PathPlannerLib.
    */
   public void initializeAuto() {
-    AutoBuilder.configureHolonomic(
-      this::getPose,
-      this::resetOdometry,
-      this::getChassisSpeeds,
-      this::setChassisSpeeds,
-      new HolonomicPathFollowerConfig(
-        AutoConstants.kMaxSpeedMetersPerSecond,
-        DriveConstants.kTrackWidth,
-        new ReplanningConfig()),
-      this);
   }
   
   /**
@@ -350,5 +298,12 @@ public class Drivetrain extends SubsystemBase {
     SmartDashboard.putNumber("slewCurrentRotation: ", m_currentRotation);
     SmartDashboard.putNumber("slewCurrentTranslationDirection: ", m_currentTranslationDir);
     SmartDashboard.putNumber("slewCurrentTranslationMagnitude: ", m_currentTranslationMag);
+
+    // Encoder values
+    SmartDashboard.putNumberArray("Front left Encoder", m_frontLeft.encoderValues());
+    SmartDashboard.putNumberArray("Front right Encoder", m_frontRight.encoderValues());
+    SmartDashboard.putNumberArray("Rear left Encoder", m_rearLeft.encoderValues());
+    SmartDashboard.putNumberArray("Rear right Encoder", m_rearRight.encoderValues());
+
   }
 }

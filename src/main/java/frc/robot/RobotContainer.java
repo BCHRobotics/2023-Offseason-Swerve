@@ -5,8 +5,8 @@
 package frc.robot;
 
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.XboxController;
-import edu.wpi.first.wpilibj.PS4Controller.Button;
 import frc.robot.Constants.OIConstants;
 import frc.robot.commands.Autos;
 import frc.robot.subsystems.Drivetrain;
@@ -22,18 +22,18 @@ import edu.wpi.first.wpilibj2.command.button.JoystickButton;
  * (including subsystems, commands, and button mappings) should be declared here.
  */
 public class RobotContainer {
-  // The robot's subsystems
-  private final Drivetrain m_robotDrive = new Drivetrain();
+    // The robot's subsystems
+    private final Drivetrain m_robotDrive = new Drivetrain();
 
   // The driver's controller
-  XboxController m_driverController = new XboxController(OIConstants.kDriverControllerPort);
+  Joystick m_driverController = new Joystick(OIConstants.kDriverControllerPort);
 
-  /**
-   * The container for the robot. Contains subsystems, OI devices, and commands.
-   */
-  public RobotContainer() {
-    // Configure the button bindings
-    this.configureButtonBindings();
+    /**
+     * The container for the robot. Contains subsystems, OI devices, and commands.
+     */
+    public RobotContainer() {
+        // Configure the button bindings
+        this.configureButtonBindings();
 
     // Configure default commands
     m_robotDrive.setDefaultCommand(
@@ -41,9 +41,9 @@ public class RobotContainer {
         // Turning is controlled by the X axis of the right stick.
         new RunCommand(
             () -> m_robotDrive.drive(
-                -MathUtil.applyDeadband(m_driverController.getLeftY(), OIConstants.kDriveDeadband),
-                -MathUtil.applyDeadband(m_driverController.getLeftX(), OIConstants.kDriveDeadband),
-                -MathUtil.applyDeadband(m_driverController.getRightX(), OIConstants.kDriveDeadband),
+                -MathUtil.applyDeadband(m_driverController.getY(), OIConstants.kDriveDeadband),
+                -MathUtil.applyDeadband(m_driverController.getX(), OIConstants.kDriveDeadband),
+                -MathUtil.applyDeadband(m_driverController.getTwist(), OIConstants.kTwistDeadband),
                 OIConstants.kFieldRelative, OIConstants.kRateLimited),
             m_robotDrive));
   }
@@ -58,28 +58,24 @@ public class RobotContainer {
    * {@link JoystickButton}.
    */
   // TODO: Add different classes for different commands.
-  private void configureButtonBindings() {
-    // Break Command (RB)
+    private void configureButtonBindings() {
+
+    // Break Command (Button 2)
     // TODO: Remove when new break command is tested
-    new JoystickButton(m_driverController, Button.kR1.value)
+    new JoystickButton(m_driverController, 2)
         .whileTrue(new RunCommand(() -> m_robotDrive.setX(), m_robotDrive));
+
+    //Zero heading (Button 5)
+    //TODO: Add a function to revert to field heading
+    new JoystickButton(m_driverController, 5)
+    .whileTrue(new RunCommand(() -> m_robotDrive.zeroHeading(), m_robotDrive));
     
-    // Slow Command (LB)
+    // Slow Command (Button 1)
     // TODO: Test Slow Command later
-    new JoystickButton(m_driverController, Button.kL1.value)
+    new JoystickButton(m_driverController, 1)
         .onTrue(new InstantCommand(() -> m_robotDrive.setSlowMode(true), m_robotDrive))
-        .onFalse(new InstantCommand(() -> m_robotDrive.setSlowMode(false), m_robotDrive));
-
-    // Switch Mode Command (Y)
-    // TODO: Test Switch mode later
-    // TODO: Remove for competition
-    new JoystickButton(m_driverController, Button.kTriangle.value).onTrue(m_robotDrive.switchMode());
-
-    // Force Stop Command (RT)
-    new JoystickButton(m_driverController, Button.kR1.value).whileTrue(m_robotDrive.forceStop());
-
-    
-  }
+        .onFalse(new InstantCommand(() -> m_robotDrive.setSlowMode(false), m_robotDrive));    
+    }
 
     /**
      * Use this to pass the autonomous command to the main {@link Robot} class.

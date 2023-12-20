@@ -2,9 +2,6 @@ package frc.robot.commands;
 
 import java.util.List;
 
-import com.pathplanner.lib.auto.AutoBuilder;
-import com.pathplanner.lib.path.PathPlannerPath;
-
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -20,7 +17,6 @@ import frc.robot.Constants.DriveConstants;
 import frc.robot.subsystems.Drivetrain;
 
 public class Autos {
-
    /**
    * A basic auto that moves in an 's'curve path.
    *
@@ -38,10 +34,12 @@ public class Autos {
     Trajectory exampleTrajectory = TrajectoryGenerator.generateTrajectory(
         // Start at the origin facing the +X direction
         new Pose2d(0, 0, new Rotation2d(0)),
-        // Pass through these two interior waypoints, making an 's' curve path
-        List.of(new Translation2d(1, 1), new Translation2d(2, -1)),
-        // End 3 meters straight ahead of where we started, facing forward
-        new Pose2d(3, 0, new Rotation2d(0)),
+        // Pass through these eight  interior waypoints, making an '8' curve path
+        List.of(
+          new Translation2d(1, 1)
+        ),
+        // End at the beginning.
+        new Pose2d(2, 0, new Rotation2d(0)),
         config);
 
     var thetaController = new ProfiledPIDController(
@@ -66,15 +64,4 @@ public class Autos {
     // Run path following command, then stop at the end.
     return swerveControllerCommand.andThen(() -> m_robotDrive.drive(0, 0, 0, false, false));
   }
-
-
-   /**
-   * An advanced auto that moves in a circular path.
-   *
-   * @return Advanced Auto Command
-   */
-  public static Command getAdvancedAuto(Drivetrain m_robotDrive) {
-    return AutoBuilder.followPathWithEvents(PathPlannerPath.fromPathFile("AdvancedAuto"));
-  }
-  
 }
