@@ -5,6 +5,10 @@
 package frc.robot.subsystems;
 
 import com.kauailabs.navx.frc.AHRS;
+import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.util.HolonomicPathFollowerConfig;
+import com.pathplanner.lib.util.PIDConstants;
+import com.pathplanner.lib.util.ReplanningConfig;
 
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -15,7 +19,9 @@ import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.util.WPIUtilJNI;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import frc.robot.Constants.AutoConstants;
 import frc.robot.Constants.DriveConstants;
 import frc.utils.SwerveUtils;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -69,7 +75,7 @@ public class Drivetrain extends SubsystemBase {
 
   /** Creates a new DriveSubsystem. */
   public Drivetrain() {
-    // TODO: Initialize auto when it's ready for testing.
+    // TODO: Test auto
     this.initializeAuto();
 
   }
@@ -263,6 +269,27 @@ public class Drivetrain extends SubsystemBase {
    * Initializes the auto using PathPlannerLib.
    */
   public void initializeAuto() {
+    AutoBuilder.configureHolonomic(
+          this::getPose, 
+          this::resetOdometry, 
+          this::getChassisSpeeds, 
+          this::setChassisSpeeds,
+          new HolonomicPathFollowerConfig( 
+                  new PIDConstants(AutoConstants.kPXController, 0.0, 0.0), // Translation PID constants
+                  new PIDConstants(AutoConstants.kPThetaController, 0.0, 0.0), // Rotation PID constants
+                  4.8,
+                  0.44, // Distance from robot center to furthest module. // TODO: Measure this value.
+                  new ReplanningConfig() 
+          ),
+          () -> {
+              var alliance = DriverStation.getAlliance();
+              if (alliance.isPresent()) {
+                  return alliance.get() == DriverStation.Alliance.Red;
+              }
+              return false;
+          },
+          this 
+        );
   }
   
   /**
