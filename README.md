@@ -1,14 +1,13 @@
 # FIRST Robotics Team 2386 - Trojans: 2023 Offseason Swerve Drive
 
-This is team 2386 swerve code
+2386 Swerve Drive Code. Offseason project (Sept 2023 - Jan 2024).
 
 ## Getting Started
 
 ### Installation
 
 To run edit the code you must have the following items on your computer:
-* VSCode: (https://code.visualstudio.com/)
-* WPILib Extension: (https://marketplace.visualstudio.com/items?itemName=wpilibsuite.vscode-wpilib)
+* WPILib VSCode: (https://github.com/wpilibsuite/allwpilib/releases)
 * Java Tools: (https://code.visualstudio.com/docs/languages/java)
 
 To drive the code you must have:
@@ -19,8 +18,10 @@ To drive the code you must have:
 These are the vendor libraries that we are using. These are what you need to copy if they are missing.
 
 ```
-https://dev.studica.com/releases/2023/NavX.json
-https://software-metadata.revrobotics.com/REVLib.json
+
+https://dev.studica.com/releases/2024/NavX.json
+https://software-metadata.revrobotics.com/REVLib-2024.json
+https://3015rangerrobotics.github.io/pathplannerlib/PathplannerLib.json
 ```
 
 ### Running the code
@@ -38,8 +39,8 @@ https://software-metadata.revrobotics.com/REVLib.json
 
 FIRST BSD License
 
-Copyright (c) 2009-2023 FIRST and other WPILib contributors 
-Copyright (c) 2020-2023 Team 2386
+Copyright (c) 2009-2024 FIRST and other WPILib contributors 
+Copyright (c) 2020-2024 Team 2386
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
