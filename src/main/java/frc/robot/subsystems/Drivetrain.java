@@ -326,10 +326,10 @@ public class Drivetrain extends SubsystemBase {
     SmartDashboard.putNumber("slewCurrentTranslationMagnitude: ", m_currentTranslationMag);
 
     // Encoder values
-    SmartDashboard.putNumberArray("Front left Encoder", m_frontLeft.encoderValues());
-    SmartDashboard.putNumberArray("Front right Encoder", m_frontRight.encoderValues());
-    SmartDashboard.putNumberArray("Rear left Encoder", m_rearLeft.encoderValues());
-    SmartDashboard.putNumberArray("Rear right Encoder", m_rearRight.encoderValues());
+    SmartDashboard.putString("Front left Encoder", m_frontLeft.getState().toString());
+    SmartDashboard.putString("Front right Encoder", m_frontRight.getState().toString());
+    SmartDashboard.putString("Rear left Encoder", m_rearLeft.getState().toString());
+    SmartDashboard.putString("Rear right Encoder", m_rearRight.getState().toString());
 
   }
 }
